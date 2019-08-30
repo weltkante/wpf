@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#include "CPP/precomp.hxx"
 #include <shlwapi.h>
 #include "Utils.hxx" // from shared\inc
 #include "dwriteloader.h" // from shared\inc
@@ -13,8 +12,8 @@
 // We cannot simply put this namespace specification in these 2 header files
 // or elase we will break the compilation of truetype subsetter.
 namespace MS { namespace Internal { namespace TtfDelta { 
-#include "CPP\TrueTypeSubsetter\TtfDelta\GlobalInit.h"
-#include "CPP\TrueTypeSubsetter\TtfDelta\ControlTableInit.h"
+#include "DirectWriteForwarder\TrueTypeSubsetter\TtfDelta\GlobalInit.h"
+#include "DirectWriteForwarder\TrueTypeSubsetter\TtfDelta\ControlTableInit.h"
 }}} // namespace MS::Internal::TtfDelta
 
 using namespace System;

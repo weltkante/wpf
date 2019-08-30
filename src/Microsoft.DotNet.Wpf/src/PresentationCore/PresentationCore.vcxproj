@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <CLRSupport>pure</CLRSupport>
+  </PropertyGroup>
+
+  <PropertyGroup>
+      <!-- Target .Net Core 3.0 -->
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E490620F-542F-4F65-9DAA-577F17B0CCB9}</ProjectGuid>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CDefines>$(CDefines);PRESENTATION_CORE=1;INTEL</CDefines>
+    <UseClrCrt>true</UseClrCrt>
+    <OutputName>PresentationCore</OutputName>
+    <TargetType>DYNLINK</TargetType>
+    <LinkSubSystem>CONSOLE</LinkSubSystem>
+  </PropertyGroup>
+
+  <Import Project="$(WpfCppProps)" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>%(AdditionalOptions) /clr:initLocals</AdditionalOptions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(WpfSharedDir)\inc;.\</AdditionalIncludeDirectories>
+      <CompileAsManaged>pure</CompileAsManaged>
+      <PreprocessorDefinitions>$(CDefines);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions) /CLRUNMANAGEDCODECHECK:NO /ignore:4042,4075</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(WpfSourceDir)WindowsBase\WindowsBase.csproj" />
+    <ProjectReference Include="$(WpfSourceDir)System.Xaml\System.Xaml.csproj" />
+    <ProjectReference Include="DirectWriteForwarder\DirectWriteForwarder.vcxproj">
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Link</OutputItemType>
+    </ProjectReference>
+    <ProjectReference Include="CSharp\PresentationCoreCSharp.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Link</OutputItemType>
+    </ProjectReference>
+    <ProjectReference Include="$(WpfSourceDir)PresentationCore\ref\PresentationCore-ref.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Link Include="Shlwapi.lib" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="$(WpfSourceDir)PresentationCore\Resources\Strings.resx" />
+    <EmbeddedResource Include="$(WpfSourceDir)PresentationCore\CSharp\System\Windows\Media\Resources\ColorProfiles\ColorProfiles.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <GenerateSource>false</GenerateSource>
+      <XlfInput>false</XlfInput>
+      <ManifestResourceName>ColorProfiles</ManifestResourceName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <CLCompile Include="main.cpp" />
+    <CLCompile Include="otherassemblyattrs.cpp" />
+    <CLCompile Include="$(WpfSharedDir)\cpp\dwriteloader.cpp" />
+    <CLCompile Include="$(WpfSharedDir)\cpp\Utils.cxx" />
+  </ItemGroup>
+  
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+</Project>

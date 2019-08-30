@@ -1,6 +1,10 @@
 ﻿<Project>
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <PropertyGroup>
+    <OutputType>Module</OutputType>
+    <ModuleAssemblyName>PresentationCore</ModuleAssemblyName>
+    <TargetExt>.netmodule</TargetExt>
+    <SignAssembly>false</SignAssembly>
     <DefineConstants>$(DefineConstants);CORE_NATIVEMETHODS;PRESENTATION_CORE;COMMONDPS</DefineConstants>
     <NoWarn>$(NoWarn);0618;0436;1058;1705;3001;3002;3003;3009;3024</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -9,7 +13,10 @@
     <GenerateResourcesSRNamespace>MS.Internal.PresentationCore</GenerateResourcesSRNamespace>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <Platforms>AnyCPU;x64</Platforms>
-    <InjectModuleInitializer>true</InjectModuleInitializer>
+    <!-- Must always build this as AnyCPU to avoid LNK1302 in the merge project one level above. -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <!-- We don't need assembly info here as the output from this project will just be merged into PresentationCore. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -102,7 +109,6 @@
     <Compile Include="$(WpfSharedDir)\Telemetry\Managed\TelemetryEventSource.cs" />
     <Compile Include="$(WpfSharedDir)\Telemetry\Managed\TraceLoggingProvider.cs" />
     <Compile Include="$(WpfSharedDir)\Telemetry\Managed\TraceLoggers\XpsOMPrintingTraceLogger.cs" />
-    <Compile Include="ModuleInitializer.cs" />
     <Compile Include="otherassemblyattrs.cs" />
     <Compile Include="SR.cs" />
     <Compile Include="MS\Internal\AnimatedTypeHelpers.cs" />
@@ -1413,66 +1419,27 @@
   <ItemGroup>
     <!-- required for internals access -->
     <ProjectReference Include="$(WpfSourceDir)WindowsBase\WindowsBase.csproj" />
-    <ProjectReference Include="$(WpfSourceDir)DirectWriteForwarder\DirectWriteForwarder.vcxproj">
+    <ProjectReference Include="..\DirectWriteForwarder\DirectWriteForwarder.vcxproj" Condition="'$(DesignTimeBuild)'!='true'">
       <UndefineProperties>TargetFramework;TargetFrameworks</UndefineProperties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>AddModules</OutputItemType>
+      <!-- the VC targets assume a project is either a managed assembly or static lib, but we treat this as both.
+           To make that work run GetTargetPath explicitly since Build won't return it  -->
+      <Targets>Build;GetTargetPath</Targets>
     </ProjectReference>
     <ProjectReference Include="$(WpfSourceDir)System.Xaml\System.Xaml.csproj" />
     <ProjectReference Include="$(WpfSourceDir)System.Windows.Input.Manipulations\System.Windows.Input.Manipulations.csproj" />
     <ProjectReference Include="$(WpfSourceDir)UIAutomation\UIAutomationTypes\UIAutomationTypes.csproj" />
     <ProjectReference Include="$(WpfSourceDir)UIAutomation\UIAutomationProvider\UIAutomationProvider.csproj" />
-    <ProjectReference Include="$(WpfSourceDir)PresentationCore\ref\PresentationCore-ref.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
-
-  <!-- 
-    Need Microsoft.WinFx.targets to embed *.compositefont 
-    files using MainResourcesGeneration target
-  -->
-  <PropertyGroup>
-    <InternalMarkupCompilation>true</InternalMarkupCompilation>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Resource Include="Fonts\*.CompositeFont">
-      <GenerateSource>false</GenerateSource>
-      <XlfSource>false</XlfSource>
-    </Resource>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="$(WpfSourceDir)PresentationCore\Resources\Strings.resx" />
-    <EmbeddedResource Include="$(WpfSourceDir)PresentationCore\System\Windows\Media\Resources\ColorProfiles\ColorProfiles.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <GenerateSource>false</GenerateSource>
-      <XlfInput>false</XlfInput>
-      <ManifestResourceName>ColorProfiles</ManifestResourceName>
-    </EmbeddedResource>
-    
-    <!-- 
-        Workaround for https://github.com/dotnet/wpf/issues/1385
-        ReadyToRun images of WPF applications crash 
-        
-        When producing ReadyToRun images, the ILLinker is configured to skip 
-        C++/CLI images. See https://github.com/mono/linker/issues/651 and 
-        https://github.com/mono/linker/pull/658. 
-        
-        In turn, this results in the failure of the dependencies of such assemblies from being
-        identified and included in the ReadyToRun images. 
-        
-        This linker hint exists to ensure that such dependencies are included. We need
-        to place these hints in an assembly that has a reference to the corresponding
-        C++/CLI assembly. 
-        
-             PresentationCore -> DirectWriteFowarder
-             ReachFramework -> System.Printing
-    -->    
-    <EmbeddedResource Condition="Exists('ILLinkTrim.xml')" Include="ILLinkTrim.xml">
-      <XlfInput>false</XlfInput>
-      <LogicalName>$(AssemblyName).xml</LogicalName>
+    <!-- Needs to be included here in order to generate SRID. -->
+    <EmbeddedResource Include="$(WpfSourceDir)PresentationCore\Resources\Strings.resx">
+      <ManifestResourceName>FxResources.PresentationCore.SR</ManifestResourceName>
     </EmbeddedResource>
   </ItemGroup>
-
+  
   <!-- Including the Microsoft.TextTemplating.targets requires us to manually import Sdk.Targets because
        it needs to be imported after Sdk.targets. This causes the BuildDependsOn variable,
        which is modified by the T4 targets, to be overwritten, so the TransformAll target 

@@ -23,24 +23,35 @@
 
   <PropertyGroup>
     <CLRSupport>pure</CLRSupport>
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <!-- We don't need assembly info here as the output from this project will just be merged into PresentationCore. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <PropertyGroup>
-      <!-- Target .Net Core 3.0 -->
+    <!-- Target .Net Core 3.0 -->
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
   </PropertyGroup>
   
+  <!-- 
+    We need this to be above our C++/CLI configuration options as the C++ props files will 
+    set TargetExt (and other props) based on ConfigurationType and we want to override that.
+  -->
   <Import Project="$(WpfCppProps)" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
 
+  <PropertyGroup>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <!-- Don't Link, we only need the OBJ file as an Additional module for C# -->
+    <LinkCompiled>false</LinkCompiled>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <TargetExt>.obj</TargetExt>
+  </PropertyGroup>
+  
   <PropertyGroup Label="Globals">
     <ProjectGuid>{50A5318F-3B9A-48B9-9615-D5FA9D6D9C3E}</ProjectGuid>
     <UseClrCrt>true</UseClrCrt>
     <OutputName>DirectWriteForwarder</OutputName>
-    <TargetType>DYNLINK</TargetType>
-    <LinkSubSystem>CONSOLE</LinkSubSystem>
     <CDefines>$(CDefines);PRESENTATION_CORE=1;INTEL</CDefines>
   </PropertyGroup>
   
@@ -69,14 +80,10 @@
     <ClInclude Include="precomp.hxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CPP\DirectWriteForwarder.cpp" />
-    <ClCompile Include="CPP\precomp.cxx">
+    <ClCompile Include="DirectWriteForwarder.cpp" />
+    <ClCompile Include="precomp.cxx">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <CLCompile Include="$(WpfSharedDir)\cpp\dwriteloader.cpp" />
-    <CLCompile Include="$(WpfSharedDir)\cpp\Utils.cxx" />
-    <CLCompile Include="main.cpp" />
-    <CLCompile Include="OtherAssemblyAttrs.cpp" />
   </ItemGroup>
 
   <!-- 
@@ -106,4 +113,9 @@
   
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 
+  <PropertyGroup>
+    <!-- CPP targets disable copying since its typically done by link, but we're disabling link -->
+    <SkipCopyBuildProduct>false</SkipCopyBuildProduct>
+  </PropertyGroup>
+  
 </Project>
